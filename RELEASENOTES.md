@@ -10,7 +10,11 @@ This release of SpriteSomething includes many basic features of the main design 
 
 ### Super Metroid
 
-* Add Infinite Bomb Jump simulator & Morph Ball Bounce simulator
+* Add Spiffy Button for toggling Screw Attack animation split (new Spin Attack without Space Jump graphics) that is honored on-injection
+* Update Download URLs for SpriteSomething-collections
+* Check for VT Tournament flags
+* Check for Combo Tournament flags
+* Check for VARIA Tournament flags
 
 ## Features
 

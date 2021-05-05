@@ -1,0 +1,37 @@
+---
+# ZGFX manifest file
+# https://github.com/spannerisms/ZippedGraphics
+meta:
+    game: "The Legend of Zelda: A Link to the Past"
+
+    package:
+        name: Link
+        author: Nintendo
+        version: 1.0
+        rom_author: NINTENDO  # This is what we use to put author names in credits
+
+    description:
+        character: Link
+        gender: male
+        race: hylian
+        type: player character
+        universe: Legend of Zelda
+
+included_graphics:
+    - file: link.4bpp         # binary yy-chr-like pixels
+      type: PlayerSprite
+      add: raw                # this is how the file will be included, either raw or as an XOR mask
+
+    - file: link.png          # SpriteSomething-like png, has pixels & palette data
+      type: PlayerCombo
+      add: parse
+
+    - file: link.rawpalette   # binary yy-chr-like palette
+      type: PlayerPalette
+      add: raw
+
+    # The "parse" add type can be used to parse data instead of including it raw
+    # This allows easier access to editing certain types of files for the end user
+    - file: linkpalette.yml   # text file with 5:5:5 hex values
+      type: PlayerPalette
+      add: parse

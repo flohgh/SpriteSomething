@@ -141,10 +141,9 @@ def convert_555_to_rgb(color, recurse=True):
     # else it is iterable
     if recurse:
         return [convert_555_to_rgb(x, recurse=False) for x in color]
-    else:
-        # FIXME: English
-        raise AssertionError(
-            "convert_555_to_rgb() called with doubly-iterable argument")
+    # FIXME: English
+    raise AssertionError(
+        "convert_555_to_rgb() called with doubly-iterable argument")
 
 
 # expects (r,g,b) tuples in a list, returns big endian 2-byte colors in a list
@@ -179,7 +178,7 @@ def image_from_raw_data(tilemaps, DMA_writes, bounding_box):
 
         # tilemap[1] also contains information about whether the tile is
         #  8x8 or 16x16
-        big_tile = (tilemap[1] & 0xC2 == 0xC2)
+        big_tile = (tilemap[1] & 0x80 == 0x80)
 
         # tilemap[2] contains the Y offset
         y_offset = (tilemap[2] & 0x7F) - (0x80 if (tilemap[2] & 0x80) else 0)
@@ -367,9 +366,9 @@ def convert_to_4bpp(image, offset, dimensions, extra_area):
                 f"({xmin},{xmax}) are not divisible by 8")
 
     # even out the small tiles into the rest of the space
-    for offset in range(0, len(small_tiles), 0x40):
-        top_row.extend(small_tiles[offset:offset + 0x20])
-        bottom_row.extend(small_tiles[offset + 0x20:offset + 0x40])
+    for pos in range(0, len(small_tiles), 0x40):
+        top_row.extend(small_tiles[pos:pos + 0x20])
+        bottom_row.extend(small_tiles[pos + 0x20:pos + 0x40])
 
     return top_row + bottom_row
 
@@ -468,3 +467,10 @@ def from_u16(buffer):
 def from_u32(buffer):
     # returns a tuple with "quantity" number of elements
     return struct.unpack_from('<L', buffer)[0]
+
+
+def main():
+    print(f"Called main() on utility library {__file__}")
+
+if __name__ == "__main__":
+    main()

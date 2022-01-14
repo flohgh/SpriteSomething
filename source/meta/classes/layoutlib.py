@@ -7,6 +7,7 @@
 
 import itertools
 import json
+import os
 from PIL import Image, ImageOps, ImageDraw
 from source.meta.common import common
 
@@ -24,7 +25,7 @@ class Layout():
                     self.reverse_lookup[tuple(image_ref)] = [image_name]
 
     def get_image_name(self, animation, pose, force=None):
-        if type(animation) is int:
+        if isinstance(animation,int):
             animation = common.pretty_hex(animation)
 
         image_name_list = self.get_all_image_names(animation, pose)
@@ -42,7 +43,7 @@ class Layout():
             return "null"
 
     def get_all_image_names(self, animation, pose):
-        if type(animation) is int:
+        if isinstance(animation,int):
             animation = common.pretty_hex(animation)
         # get the full list
         return self.reverse_lookup[(animation, pose)]
@@ -155,7 +156,7 @@ class Layout():
             for _ in range(FAILSAFE):
                 if this_property in self.data["images"][image_name]:
                     return self.data["images"][image_name][this_property]
-                elif "parent" in self.data["images"][image_name]:
+                if "parent" in self.data["images"][image_name]:
                     image_name = self.data["images"][image_name]["parent"]
                 else:
                     return None
@@ -213,7 +214,7 @@ class Layout():
             current_y += image.size[1]
         return collage
 
-    def export_all_images_to_PNG(self, all_images, master_palette):
+    def export_all_images_to_PNG(self, all_images, master_palette, filename):
         all_collages = []
         for row in self.get_rows():
 
@@ -244,7 +245,17 @@ class Layout():
             collage = self.make_horizontal_collage(this_row_images)
             all_collages.append(collage)
 
-        full_layout = self.make_vertical_collage(all_collages)
+        full_layout_collage = self.make_vertical_collage(all_collages)
+
+        # load the original PNG and use a mask to grab everything outside
+        # the frame and paste it back ontop of the collage
+
+        samus_mask = Image.open(common.get_resource(os.path.join("snes","metroid3","samus","sheets"),"samus_mask.png"))
+        if samus_mask.width == full_layout_collage.width:
+            original_image = Image.open(filename).convert("RGBA")
+            full_layout = Image.composite(original_image, full_layout_collage, samus_mask)
+        else:
+            full_layout = full_layout_collage
         return full_layout
 
     def extract_all_images_from_master(self, master_image):

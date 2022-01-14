@@ -7,7 +7,7 @@ def rom_extract(sprite, rom):
 	all_images = {}
 	for image_name in [name for row in sprite.layout.get_rows() for name in row]:  #for every image referenced explicitly in the layout
 		animation, pose = sprite.layout.data["images"][image_name]["used by"][0]   #import a representative animation and pose
-		if type(animation) is str and animation[0:2] == "0x":                #convert from hex if needed
+		if isinstance(animation,str) and animation[0:2] == "0x":                #convert from hex if needed
 			animation = int(animation[2:], 16)
 
 		force = sprite.layout.get_property("import", image_name)
@@ -28,10 +28,10 @@ def rom_extract(sprite, rom):
 	return all_images
 
 def get_sprite_pose(sprite, rom, animation_ID, pose, bounding_box, upper=True,lower=True):
-	if type(animation_ID) is str:
+	if isinstance(animation_ID,str):
 		if animation_ID[:2] == "0x":   #it's a hex code
 			return get_sprite_pose(sprite, rom, int(animation_ID[2:],16), pose, bounding_box, upper=upper,lower=lower)
-		elif animation_ID == "death_left":
+		if animation_ID == "death_left":
 			tilemaps, DMA_writes, duration = rom.get_death_data(pose, facing="left") # FIXME: duration unused variable
 			if not upper:   #trim out the suit pieces
 				tilemaps = [tilemap for tilemap in tilemaps if tilemap[4] & 0x1C != 0x08]

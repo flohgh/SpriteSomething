@@ -14,9 +14,9 @@ class AnimationEngineParent():
 	def __init__(self, my_subpath, game, sprite):
 		self.game = game
 		self.sprite = sprite
-		self.resource_subpath = my_subpath           #the path to this sprite's subfolder in resources
-		self.spiffy_dict = {}						 #the variables created by the spiffy buttons will go here
-		self.overhead = True                         #by default, this will create NESW direction buttons.  If false, only left/right buttons
+		self.resource_subpath = my_subpath  #the path to this sprite's subfolder in resources
+		self.spiffy_dict = {}               #the variables created by the spiffy buttons will go here
+		self.overhead = True                #by default, this will create NESW direction buttons.  If false, only left/right buttons
 		self.overview_scale_factor = sprite.overview_scale_factor #when the overview is made, it is scaled up by this amount
 		self.step_number_label = tk.Label()
 		self.step_total_label = tk.Label()
@@ -29,8 +29,8 @@ class AnimationEngineParent():
 			self.animations = json.load(file)
 		if "$schema" in self.animations:
 			del self.animations["$schema"]
-
-		self.current_animation = next(iter(self.animations.keys()))   #using a default value until the animation_panel attachment overrides this
+		#using a default value until the animation_panel attachment overrides this
+		self.current_animation = next(iter(self.animations.keys()))
 
 	def attach_animation_panel(self, parent, canvas, overview_canvas, zoom_getter, frame_getter, coord_getter, coord_setter, fish):
 		ANIMATION_DROPDOWN_WIDTH = 25
@@ -199,15 +199,14 @@ class AnimationEngineParent():
 			current_frame -= self.palette_last_transition_frame
 
 			return self.current_animation, displayed_direction, self.pose_number, palette_info, current_frame, pose_list
-		else:
-#			print("No pose list for displayed direction (%s)!" % displayed_direction)
-			return None, None, None, None, None, None
+#		print("No pose list for displayed direction (%s)!" % displayed_direction)
+		return None, None, None, None, None, None
 
 	def get_current_image(self):
 		current_animation, displayed_direction, pose_number, palette_info, current_frame, pose_list = self.get_image_arguments_from_frame_number(self.frame_getter())
 		if current_animation:
 			pose_image,offset = self.sprite.get_image(current_animation, displayed_direction, pose_number, palette_info, current_frame)
-			if pose_image == None:
+			if pose_image is None:
 				pass
 #				print("Pose image (%s %s %d %d) not found!" % current_animation, displayed_direction, pose_number, current_frame)
 			tile_list = self.sprite.get_tiles_for_pose(current_animation, displayed_direction, pose_number, palette_info, current_frame)
@@ -266,8 +265,7 @@ class AnimationEngineParent():
 			if "aiming_var" in self.spiffy_dict:
 				direction = "_aim_".join([direction, self.spiffy_dict["aiming_var"].get().lower()])
 			return direction
-		else:
-			return "right"   #TODO: figure out a better way to handle the error case
+		return "right"   #TODO: figure out a better way to handle the error case
 
 	#Mike likes spiffy buttons
 	def get_spiffy_buttons(self, parent, fish):
@@ -459,9 +457,16 @@ class AnimationEngineParent():
 					save_all=True, transparency=255, disposal=2, duration=gif_durations, loop=0,
 					optimize=False)
 				return True
-			elif len(frames) == 1:
+			if len(frames) == 1:
 				frames[0].save(filename)
 			else:
 				return False
 		else:
 			return False
+
+
+def main():
+    print(f"Called main() on utility library {__file__}")
+
+if __name__ == "__main__":
+    main()

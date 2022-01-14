@@ -15,6 +15,9 @@ __pycache__/
 /.vscode
 /.idea
 
+# But do keep tasks file
+!/.vscode/tasks.json
+
 # no PowerShell scripts
 *.ps*
 
@@ -50,5 +53,6 @@ palette_writers.json
 
 # no custom files
 custom/
-resources/user/*/*/*/sheets
+resources/user/**/sheets
 resources/tmp/*
+resources/**/stamped.png

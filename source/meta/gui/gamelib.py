@@ -9,17 +9,11 @@ import tkinter as tk	#for GUI stuff
 import random					#for choosing background image to load on app startup
 from PIL import Image, ImageFile
 from functools import partial
-from source.snes import romhandler as snes
 from source.meta.gui import widgetlib
 from source.meta.common import common
 from source.meta.gui import gui_common #TODO: Should not use GUI stuff in game class, need to move this elsewhere
 
-def autodetect(sprite_filename):
-	#need to autodetect which game, and which sprite
-	#then return an instance of THAT game's class, and an instance of THAT sprite
-	_,file_extension = os.path.splitext(sprite_filename)
-  #If this is a SNES filetype
-	if file_extension.lower() in [".sfc",".smc"]:
+def autodetect_snes(sprite_filename):
 		#If the file is a rom, then we can go into the internal header and get the name of the game
 		game_names = autodetect_game_type_from_rom_filename("snes",sprite_filename)
 		selected_game = None
@@ -33,8 +27,9 @@ def autodetect(sprite_filename):
 
 		game = get_game_class_of_type("snes",selected_game)
 		#And by default, we will grab the player sprite from this game
-		sprite, animation_assist = game.make_player_sprite(sprite_filename)
-	elif file_extension.lower() == ".nes":
+		return game, game.make_player_sprite(sprite_filename)
+
+def autodetect_nes(sprite_filename):
 		#If the file is a rom, then we can go into the internal header and get the name of the game
 		game_names = autodetect_game_type_from_rom_filename("nes",sprite_filename)
 		selected_game = None
@@ -48,12 +43,13 @@ def autodetect(sprite_filename):
 
 		game = get_game_class_of_type("nes",selected_game)
 		#And by default, we will grab the player sprite from this game
-		sprite, animation_assist = game.make_player_sprite(sprite_filename)
-  #If it's not a known filetype but a PNG, cycle through and find one that matches
-	elif file_extension.lower() == ".png":
+		return game, game.make_player_sprite(sprite_filename)
+
+def autodetect_png(sprite_filename):
 		#the following line prevents a "cannot identify image" error from PIL
 		ImageFile.LOAD_TRUNCATED_IMAGES = True
 		#I'm not sure what to do here yet in a completely scalable way, since PNG files have no applicable metadata
+		(game, sprite, animation_assist) = (None, None, None)
 		with Image.open(sprite_filename) as loaded_image:
 		  game_found = False
 		  search_path = os.path.join("resources","app")
@@ -74,12 +70,27 @@ def autodetect(sprite_filename):
 		if not game_found:
 			# FIXME: English
 			raise AssertionError(f"Cannot recognize the type of file {sprite_filename} from its size: {loaded_image.size}")
+		return game, sprite, animation_assist
+
+def autodetect(sprite_filename):
+	#need to autodetect which game, and which sprite
+	#then return an instance of THAT game's class, and an instance of THAT sprite
+	_,file_extension = os.path.splitext(sprite_filename)
+  #If this is a SNES filetype
+	if file_extension.lower() in [".sfc",".smc"]:
+		game, (sprite, animation_assist) = autodetect_snes(sprite_filename)
+	#If this is a NES filetype
+	elif file_extension.lower() == ".nes":
+		game, (sprite, animation_assist) = autodetect_nes(sprite_filename)
+  #If it's not a known filetype but a PNG, cycle through and find one that matches
+	elif file_extension.lower() == ".png":
+		game, sprite, animation_assist = autodetect_png(sprite_filename)
   # FIXME: For now, ZSPRs are Z3Link sprites and we're assuming SNES
 	elif file_extension.lower() == ".zspr":
 		with open(sprite_filename,"rb") as file:
 			zspr_data = bytearray(file.read())
 		game = get_game_class_of_type("snes",get_game_type_from_zspr_data(zspr_data))
-		sprite, animation_assist = game.make_sprite_by_number(get_sprite_number_from_zspr_data(zspr_data),sprite_filename)
+		(sprite, animation_assist) = game.make_sprite_by_number(get_sprite_number_from_zspr_data(zspr_data),sprite_filename)
 	else:
 		# FIXME: English
 		raise AssertionError(f"Cannot recognize the type of file {sprite_filename} from its filename")
@@ -87,10 +98,13 @@ def autodetect(sprite_filename):
 	return game, sprite, animation_assist
 
 def autodetect_game_type_from_rom_filename(console,filename):
+  #dynamic import
+  rom_module = {}
+
   if console == "snes":
-  	return autodetect_game_type_from_rom(snes.RomHandlerParent(filename))
-  else:
-    raise AssertionError(f"Cannot recognize {console} as a supported console")
+    rom_module = importlib.import_module(f"source.{console}.romhandler")
+    return autodetect_game_type_from_rom(rom_module.RomHandlerParent(filename))
+  raise AssertionError(f"Cannot recognize {console} as a supported console")
 
 def autodetect_game_type_from_rom(rom):
 	rom_name = rom.get_name()
@@ -239,13 +253,18 @@ class GameParent():
 			except ImportError:    #there was no sprite-specific animation library, so import the parent
 				animationlib = importlib.import_module(f"source.meta.gui.animationlib")
 				animation_assist = animationlib.AnimationEngineParent(resource_subpath, self, sprite)
-
 			return sprite, animation_assist
-		else:
-			# FIXME: English
-			raise AssertionError(f"make_sprite_by_number() called for non-implemented sprite_number {sprite_number}")
+		# FIXME: English
+		raise AssertionError(f"make_sprite_by_number() called for non-implemented sprite_number {sprite_number}")
 
 	def get_rom_from_filename(self, filename):
 		#dynamic import
 		rom_module = importlib.import_module(f"source.{self.console_name}.{self.internal_name}.rom")
 		return rom_module.RomHandler(filename)
+
+
+def main():
+    print(f"Called main() on utility library {__file__}")
+
+if __name__ == "__main__":
+    main()
